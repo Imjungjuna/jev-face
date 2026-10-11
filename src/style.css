@@ -107,11 +107,17 @@ body {
 }
 
 /* One grid for every row: label | bar | number. The label column is wider than
- * the reel's because the English intensity labels are longer than the Korean. */
+ * the reel's because "4 · overwhelming" is longer than "4 · 압도적". */
 .row {
   display: grid;
-  grid-template-columns: 42% 37% 21%;
+  grid-template-columns: 47% 32% 21%;
   align-items: center;
+}
+
+/* Grid items default to min-width:auto, which lets a long label push past its
+ * track and sit on top of the bar instead of staying inside the column. */
+.row > * {
+  min-width: 0;
 }
 
 .row .label {
