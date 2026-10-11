@@ -2,7 +2,10 @@
 
 A 3D face that reacts in real time to what you type. While you type, TypeSafe AI's **Jev** judges which emotion the recipient would feel and how strongly, and the answer drives 52 ARKit blendshapes on a face mesh.
 
-![A 3D face sneering in disgust, next to a telemetry panel showing disgust at 0.760 and the typed message underneath](docs/hero.png)
+<p align="center">
+  <img src="docs/hero.png" width="520"
+       alt="A 3D face sneering in disgust, beside a telemetry panel reading disgust 0.760, with the typed message below">
+</p>
 
 ## The idea
 
