@@ -11,10 +11,18 @@ import { render, setStatus, countRequest, countFailure } from './panel.js';
 const SMOOTHING = 7.5; // higher snaps faster to the new expression
 const DEBOUNCE_MS = 250;
 
+/* Tuned against the reel, where the visible head spans 53.7% of the frame
+ * width with the crown at 7.7% from the top. The ratio runs against the model
+ * bounding box, which is wider than the face because it takes in the neck, so
+ * the number here is larger than the one measured on screen. */
+const HEAD_WIDTH_RATIO = 0.679;
+const HEAD_CENTER = { x: 0.323, y: 0.364 };
+
 let head = null;
 let influences = null;
 let poseVectors = null;
 let target = null;
+let headBox = null;
 
 /* ---------------- scene ---------------- */
 
@@ -24,10 +32,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
 const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
-camera.position.set(0, 0.17, 2.9);
-
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x17191c);
+scene.background = new THREE.Color(0x212429);
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -35,23 +41,20 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
-controls.minDistance = 1.8;
-controls.maxDistance = 5;
 controls.minAzimuthAngle = -Math.PI / 2;
 controls.maxAzimuthAngle = Math.PI / 2;
 controls.maxPolarAngle = Math.PI / 1.8;
-controls.target.set(0, 0.17, -0.15);
 
 new GLTFLoader()
   .setKTX2Loader(new KTX2Loader().setTranscoderPath('/basis/').detectSupport(renderer))
   .setMeshoptDecoder(MeshoptDecoder)
   .load('/models/facecap.glb', (gltf) => {
-    scene.add(gltf.scene.children[0]);
+    const root = gltf.scene.children[0];
+    scene.add(root);
 
-    /* The animation clips in the file are a baked take; playing them would
-     * fight the weights we drive, so the mixer from the three.js example is
-     * deliberately dropped. */
-    gltf.scene.traverse((o) => {
+    /* The clips in the file are a baked take; playing them would fight the
+     * weights we drive, so the mixer from the three.js example is dropped. */
+    root.traverse((o) => {
       const count = Object.keys(o.morphTargetDictionary ?? {}).length;
       if (count > Object.keys(head?.morphTargetDictionary ?? {}).length) head = o;
     });
@@ -59,7 +62,34 @@ new GLTFLoader()
     influences = head.morphTargetInfluences;
     target = new Float32Array(influences.length);
     poseVectors = buildPoseVectors(head.morphTargetDictionary, influences.length);
+
+    root.updateMatrixWorld(true);
+    headBox = new THREE.Box3().setFromObject(root);
+    frameHead();
   });
+
+function frameHead() {
+  if (!headBox) return;
+
+  const size = headBox.getSize(new THREE.Vector3());
+  const center = headBox.getCenter(new THREE.Vector3());
+  const halfFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+
+  // View width at distance d is 2*d*tan(halfFov)*aspect; solve for the ratio.
+  const distance = size.x / (HEAD_WIDTH_RATIO * 2 * Math.tan(halfFov) * camera.aspect);
+  const viewHeight = 2 * distance * Math.tan(halfFov);
+  const viewWidth = viewHeight * camera.aspect;
+
+  // Aiming beside the head is what pushes it off-centre on screen.
+  const x = center.x + (0.5 - HEAD_CENTER.x) * viewWidth;
+  const y = center.y - (0.5 - HEAD_CENTER.y) * viewHeight;
+
+  controls.target.set(x, y, center.z);
+  camera.position.set(x, y, center.z + distance);
+  controls.minDistance = distance * 0.5;
+  controls.maxDistance = distance * 2;
+  controls.update();
+}
 
 /* Pose maps are keyed by bare ARKit names; the file has shipped them with a
  * "blendShape1." prefix in the past, so both spellings are accepted. */
@@ -121,14 +151,12 @@ const blinkSlots = [];
 let nextBlink = 2;
 let blinkPhase = -1;
 
-function resolveBlinkSlots() {
-  for (const [key, value] of Object.entries(head.morphTargetDictionary)) {
-    if (key.replace('blendShape1.', '').startsWith('eyeBlink')) blinkSlots.push(value);
-  }
-}
-
 function blink(delta, elapsed) {
-  if (!blinkSlots.length) resolveBlinkSlots();
+  if (!blinkSlots.length) {
+    for (const [key, value] of Object.entries(head.morphTargetDictionary)) {
+      if (key.replace('blendShape1.', '').startsWith('eyeBlink')) blinkSlots.push(value);
+    }
+  }
 
   if (blinkPhase < 0 && elapsed > nextBlink) blinkPhase = 0;
   if (blinkPhase < 0) return;
@@ -152,10 +180,15 @@ const clock = new THREE.Clock();
 
 function resize() {
   const { clientWidth: w, clientHeight: h } = canvas;
-  if (canvas.width === w * renderer.getPixelRatio()) return;
+  if (!w || !h) return;
+
+  const size = renderer.getSize(new THREE.Vector2());
+  if (size.x === w && size.y === h) return;
+
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  frameHead();
 }
 
 renderer.setAnimationLoop(() => {
@@ -218,9 +251,6 @@ async function evaluate(text) {
 }
 
 input.addEventListener('input', () => {
-  input.style.height = 'auto';
-  input.style.height = `${input.scrollHeight}px`;
-
   clearTimeout(debounce);
   const text = input.value.trim();
 

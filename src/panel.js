@@ -1,38 +1,37 @@
-import {
-  EMOTION_ORDER,
-  EMOTION_COLORS,
-  INTENSITY_LABELS,
-} from './emotions.js';
+import { EMOTION_ORDER, EMOTION_COLORS, INTENSITY_LABELS } from './emotions.js';
 
 const $ = (id) => document.getElementById(id);
 
-function buildRows(host, labels) {
-  return labels.map((label) => {
+function buildRows(host, items) {
+  return items.map(({ label, color }) => {
     const row = document.createElement('div');
-    row.className = 'prob-row';
+    row.className = 'row prob-row';
     row.innerHTML =
-      `<span class="label">${label}</span>` +
+      `<span class="label">${color ? `<i class="dot" style="background:${color}"></i>` : ''}${label}</span>` +
       `<span class="bar"><i></i></span>` +
       `<span class="num">—</span>`;
     host.appendChild(row);
-    return { row, fill: row.querySelector('i'), num: row.querySelector('.num') };
+    return { row, fill: row.querySelector('.bar > i'), num: row.querySelector('.num') };
   });
 }
 
-const emotionRows = buildRows($('emotion-rows'), EMOTION_ORDER);
-const intensityRows = buildRows(
-  $('intensity-rows'),
-  INTENSITY_LABELS.map((l, i) => `${i} ${l}`),
+const emotionRows = buildRows(
+  $('emotion-rows'),
+  EMOTION_ORDER.map((name) => ({ label: name, color: EMOTION_COLORS[name] })),
 );
 
-const intensityBar = $('em-int-bar');
+const intensityRows = buildRows(
+  $('intensity-rows'),
+  INTENSITY_LABELS.map((label, i) => ({ label: `${i} · ${label}` })),
+);
+
 const counters = { requests: 0, failures: 0 };
 
 function paint(rows, probabilities, leadIndex, color) {
   rows.forEach((r, i) => {
     const p = probabilities?.[i] ?? null;
     r.fill.style.width = `${(p ?? 0) * 100}%`;
-    r.fill.style.background = i === leadIndex ? color : '#4d545c';
+    r.fill.style.background = i === leadIndex ? color : '#5a6068';
     r.num.textContent = p == null ? '—' : p.toFixed(3);
     r.row.classList.toggle('lead', i === leadIndex);
   });
@@ -63,10 +62,10 @@ export function render(body) {
 
   document.documentElement.style.setProperty('--accent', color);
 
+  $('em-dot').style.background = color;
   $('em-name').textContent = `"${choice}"`;
   $('em-int').textContent = (score / 4).toFixed(3);
-  intensityBar.style.width = `${(score / 4) * 100}%`;
-  intensityBar.style.background = color;
+  $('em-int-bar').style.width = `${(score / 4) * 100}%`;
   $('em-score').textContent = `${score.toFixed(3)} → "${INTENSITY_LABELS[level] ?? '—'}"`;
 
   paint(
@@ -83,13 +82,12 @@ export function render(body) {
   );
 
   const confidence = body.providerMetadata?.typesafe?.confidence ?? {};
-  const pairs = Object.entries(confidence)
-    .map(([k, v]) => `${k}=${Number(v).toFixed(3)}`)
-    .join(' ');
-  $('m-conf').textContent = pairs || '—';
+  $('m-conf').textContent =
+    Object.entries(confidence)
+      .map(([k, v]) => `${k}=${Number(v).toFixed(3)}`)
+      .join('\n') || '—';
   $('m-lat').textContent = `${body.latencyMs ?? '—'} ms`;
-  $('m-tok').textContent =
-    body.usage?.inputTokens ?? body.usage?.promptTokens ?? '—';
+  $('m-tok').textContent = body.usage?.inputTokens ?? body.usage?.promptTokens ?? '—';
   $('raw-json').textContent = JSON.stringify(body, null, 1);
 
   return { emotion, intensity, score };
