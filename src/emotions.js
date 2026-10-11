@@ -15,15 +15,17 @@ export const EMOTION_ORDER = [
   'contempt',
 ];
 
+/* Sampled off a reel frame, so these sit slightly darker than the original CSS
+ * after video compression. */
 export const EMOTION_COLORS = {
-  neutral: '#9aa3ad',
-  happy: '#f5c542',
-  sad: '#5b9cf0',
-  angry: '#e8544a',
-  surprised: '#f08a3c',
-  fear: '#a07ce8',
-  disgust: '#8fbf4a',
-  contempt: '#e07ab5',
+  neutral: '#9096a4',
+  happy: '#e8b029',
+  sad: '#4573c0',
+  angry: '#ca3c30',
+  surprised: '#ec7c23',
+  fear: '#6e4dbd',
+  disgust: '#758231',
+  contempt: '#288278',
 };
 
 export const INTENSITY_LABELS = ['none', 'slight', 'moderate', 'strong', 'overwhelming'];
