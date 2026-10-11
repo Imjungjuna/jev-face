@@ -110,7 +110,7 @@ body {
  * the reel's because "4 · overwhelming" is longer than "4 · 압도적". */
 .row {
   display: grid;
-  grid-template-columns: 47% 32% 21%;
+  grid-template-columns: 45% 40% 15%;
   align-items: center;
 }
 
@@ -150,7 +150,7 @@ body {
 
 .bar {
   height: 0.75cqw;
-  width: 86%;
+  width: 95%;
   border-radius: 0.4cqw;
   background: var(--track);
   overflow: hidden;
