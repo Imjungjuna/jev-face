@@ -16,12 +16,23 @@
 
 ```bash
 pnpm install
-cp .env.example .env     # AI_GATEWAY_API_KEY 채우기
+cp .env.example .env     # 키 한 줄 채우기
 pnpm dev                 # http://localhost:5180
 pnpm test                # 포즈가 참조하는 블렌드셰이프 이름 검사
 ```
 
-키는 Vercel 대시보드 → AI Gateway → API Keys에서 발급합니다. 브라우저로는 내려가지 않습니다. 클라이언트는 `{ text }`만 보내고 질문 스키마는 [api/evaluate.js](./api/evaluate.js)에서 만듭니다.
+Jev를 부르는 길이 둘입니다. 둘 다 요청 본문이 같아서 [api/evaluate.js](./api/evaluate.js)가 **어느 키가 있는지 보고 알아서 고릅니다.**
+
+| 키 | 호출 주소 | 모델 id |
+| --- | --- | --- |
+| `TYPESAFE_API_KEY` | `api.typesafe.ai/v1/systemone` | `jev-latest` |
+| `AI_GATEWAY_API_KEY` | `ai-gateway.vercel.sh/typesafe/v1/systemone` | `typesafe-ai/jev` |
+
+`TYPESAFE_API_KEY`가 있으면 그쪽을 먼저 씁니다. TypeSafe 공홈에서 받은 키는 `apikey_`로, Vercel AI Gateway 키는 `vck_`로 시작합니다. Vercel 쪽은 Jev가 무료 티어 모델이 아니라서 크레딧을 충전해야 합니다.
+
+키는 브라우저로 내려가지 않습니다. 클라이언트는 `{ text }`만 보내고 질문 스키마는 서버에서 만듭니다.
+
+`pnpm dev`는 기동할 때 `.env`를 한 번만 읽습니다. 키를 바꾸면 서버를 다시 띄우세요.
 
 ## 동작
 

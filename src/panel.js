@@ -81,13 +81,22 @@ export function render(body) {
     color,
   );
 
-  const confidence = body.providerMetadata?.typesafe?.confidence ?? {};
+  /* TypeSafe answers carry their own confidence; the gateway's evaluate route
+   * groups them under providerMetadata instead. */
+  const confidence =
+    body.providerMetadata?.typesafe?.confidence ??
+    Object.fromEntries(
+      Object.entries(answers)
+        .filter(([, a]) => typeof a?.confidence === 'number')
+        .map(([k, a]) => [k, a.confidence]),
+    );
   $('m-conf').textContent =
     Object.entries(confidence)
       .map(([k, v]) => `${k}=${Number(v).toFixed(3)}`)
       .join('\n') || '—';
   $('m-lat').textContent = `${body.latencyMs ?? '—'} ms`;
-  $('m-tok').textContent = body.usage?.inputTokens ?? body.usage?.promptTokens ?? '—';
+  $('m-tok').textContent =
+    body.usage?.input_tokens ?? body.usage?.inputTokens ?? body.usage?.promptTokens ?? '—';
   $('raw-json').textContent = JSON.stringify(body, null, 1);
 
   return { emotion, intensity, score };

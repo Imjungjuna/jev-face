@@ -23,21 +23,40 @@ export const INTENSITY_LEVELS = [
   'Overwhelming. It would dominate how the reader feels.',
 ];
 
-const GATEWAY = 'https://ai-gateway.vercel.sh/v1/evaluate';
+/*
+ * Jev is reachable two ways and the request bodies are identical, so the only
+ * difference is the URL, the model id, and which key is present.
+ */
+function provider() {
+  if (process.env.TYPESAFE_API_KEY) {
+    return {
+      url: 'https://api.typesafe.ai/v1/systemone',
+      key: process.env.TYPESAFE_API_KEY,
+      model: process.env.TYPESAFE_MODEL ?? 'jev-latest',
+    };
+  }
+  if (process.env.AI_GATEWAY_API_KEY) {
+    return {
+      url: 'https://ai-gateway.vercel.sh/typesafe/v1/systemone',
+      key: process.env.AI_GATEWAY_API_KEY,
+      model: 'typesafe-ai/jev',
+    };
+  }
+  throw new Error('set TYPESAFE_API_KEY or AI_GATEWAY_API_KEY in .env');
+}
 
 export async function evaluateText(text) {
-  const key = process.env.AI_GATEWAY_API_KEY;
-  if (!key) throw new Error('AI_GATEWAY_API_KEY is not set');
+  const { url, key, model } = provider();
 
   const started = Date.now();
-  const res = await fetch(GATEWAY, {
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${key}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'typesafe-ai/jev',
+      model,
       state: {
         draftMessage: text,
         context: 'A private one-to-one chat between two friends.',
@@ -61,8 +80,9 @@ export async function evaluateText(text) {
 
   const body = await res.json();
   if (!res.ok) {
-    const detail = body?.error?.message ?? JSON.stringify(body);
-    throw new Error(`gateway ${res.status}: ${detail}`);
+    // TypeSafe returns { message, error_type }; the gateway nests it under error.
+    const detail = body?.error?.message ?? body?.message ?? JSON.stringify(body);
+    throw new Error(`${res.status}: ${detail}`);
   }
 
   return { ...body, latencyMs: Date.now() - started };
