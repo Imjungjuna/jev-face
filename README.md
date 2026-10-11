@@ -50,9 +50,29 @@ Jev를 부르는 길이 둘입니다. 둘 다 요청 본문이 같아서 [api/ev
 - 카메라 거리와 화각: `src/main.js` 상단. 녹화 구도에 맞춰 조절하세요. 마우스로 돌려 본 뒤 그 값을 적어도 됩니다.
 - 감정별 강조 색: `src/emotions.js`의 `EMOTION_COLORS`.
 
-## 확인하지 않은 것
+## 응답 모양
 
-HTTP `/v1/evaluate` 응답 봉투의 정확한 모양입니다. 문서에 `answers`의 내용만 있고 바깥 껍데기는 나오지 않습니다. [src/panel.js](./src/panel.js)는 `body.answers ?? body`로 양쪽을 받고, 패널 맨 아래 `raw response JSON`에 원본을 그대로 보여 줍니다. 첫 요청을 보내고 그 칸을 펼쳐 보면 실제 모양이 바로 보입니다. 토큰 수와 confidence 자리가 `—`로 남으면 그 경로만 고치면 됩니다.
+`jev-1.13.0`에서 실제로 받은 것입니다.
+
+```json
+{ "model": "jev-1.13.0",
+  "answers": {
+    "emotion":   { "type": "choice", "choice": "happy", "confidence": 0.97, "probabilities": { "happy": 0.97, "…": 0 } },
+    "intensity": { "type": "score",  "score": 2.68,     "confidence": 0.71, "legend": {}, "probabilities": { "3": 0.73 } } },
+  "usage": { "input_tokens": 625, "output_tokens": 95 } }
+```
+
+`confidence`가 답변 객체 안에 있고 토큰 이름이 snake_case입니다. Vercel 문서의 `providerMetadata.typesafe.confidence`와 다른 자리라 [src/panel.js](./src/panel.js)는 양쪽을 다 봅니다.
+
+## 문장이 어디서 뒤집히는지 재기
+
+감이 아니라 측정으로 고르려면 [scripts/trace.js](./scripts/trace.js)를 씁니다. 문장을 한 단어씩 늘려 가며 보내고 감정이 바뀌는 지점을 표로 찍습니다.
+
+```bash
+node scripts/trace.js "You're gorgeous. In photos. Old ones."
+```
+
+단어 수만큼 요청이 나갑니다. 20단어면 20회, 약 $0.0008입니다.
 
 ## 녹화용 문장
 
