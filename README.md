@@ -45,9 +45,51 @@ HTTP `/v1/evaluate` 응답 봉투의 정확한 모양입니다. 문서에 `answe
 
 ## 녹화용 문장
 
-원본은 한 문장 안에서 뜻이 뒤집히면서 표정이 따라 돌아갑니다. 영어판도 같은 구조가 필요합니다.
+원본이 역동적인 이유는 단순합니다. **절이 하나 끝날 때마다 그때까지 쌓인 문장의 뜻이 뒤집힙니다.** "넌 참 좋은 친구가"까지는 칭찬이고, "별로 없지?"가 붙는 순간 모욕이 됩니다. 한국어는 동사와 부정이 문장 끝에 오니 이 반전이 저절로 따라옵니다.
 
-- `I need to tell you something. You are the best thing that ever happened to me. Or you were, before I read your texts. Anyway I haven't showered since Tuesday.`
-- `Good news, you got the promotion. Kidding. They gave it to Mark. He also took your desk. And your chair. He's sitting in it right now.`
+영어는 동사가 앞에 와서 한 절 안에서는 못 뒤집습니다. 대신 **짧은 꼬리 문장**을 붙여 앞을 통째로 다시 칠합니다.
 
-neutral에서 시작해 surprised와 happy를 찍고 sad나 angry로 떨어졌다가 disgust로 끝나면 영상에서 변화가 가장 잘 보입니다.
+| 수법 | 예 |
+| --- | --- |
+| 철회 | `You got it. Kidding.` |
+| 범위 좁히기 | `You're perfect. For someone else.` |
+| 뒤에 붙이는 전치사구 | `I think about you every day. With regret.` |
+| 꼬리를 또 뒤집기 | `As a friend. Of a friend.` |
+
+비트를 3~5단어로 끊을수록 표정이 자주 바뀝니다. 아래 셋은 그렇게 짠 것이고, 감정은 **보내는 사람이 아니라 받는 사람** 기준입니다.
+
+### A. 가장 역동적 (8비트, 123자)
+
+```text
+Hey. I love you. As a friend. Of a friend. Who told me to stop texting you. She's in your kitchen. She used your toothbrush.
+```
+
+| 여기까지 쳤을 때 | 받는 사람 감정 |
+| --- | --- |
+| `Hey.` | neutral |
+| `I love you.` | happy |
+| `As a friend.` | sad |
+| `Of a friend.` | sad |
+| `Who told me to stop texting you.` | angry |
+| `She's in your kitchen.` | fear |
+| `She used your toothbrush.` | disgust |
+
+### B. 원본과 길이가 가장 비슷함 (6비트, 124자)
+
+```text
+Quick update. You got the promotion. Kidding. Mark did. He wants your desk by Friday. He's behind you. I drank from your mug.
+```
+
+neutral → happy → sad → angry → fear → disgust로 갑니다. 124자면 분당 240자로 쳐서 31초라 릴스 33초와 거의 같습니다.
+
+### C. 원본과 말투가 가장 비슷함 (6비트, 155자)
+
+```text
+I have to tell you something. You're my favorite person. To lie to. Everyone knows. They're outside your door right now. I ate your lunch too. Off the floor.
+```
+
+`To lie to.`가 영어판의 "별로 없지?"입니다. 앞 문장을 칭찬에서 조롱으로 뒤집습니다.
+
+### 직접 쓸 때
+
+contempt는 받는 사람이 **보내는 사람을 깔봐야** 나옵니다. 받는 사람을 비웃는 문장은 contempt가 아니라 angry로 갑니다. fear는 "지금 네 뒤에 있다"처럼 **곧 닥칠 일**을 적으면 걸립니다. disgust는 몸으로 느끼는 역겨움이라야 확실합니다.
